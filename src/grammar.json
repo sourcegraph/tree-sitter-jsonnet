@@ -395,8 +395,8 @@
                 "type": "CHOICE",
                 "members": [
                   {
-                    "type": "STRING",
-                    "value": "tailstrict"
+                    "type": "SYMBOL",
+                    "name": "tailstrict"
                   },
                   {
                     "type": "BLANK"
@@ -777,6 +777,10 @@
     "local": {
       "type": "STRING",
       "value": "local"
+    },
+    "tailstrict": {
+      "type": "STRING",
+      "value": "tailstrict"
     },
     "objinside": {
       "type": "CHOICE",

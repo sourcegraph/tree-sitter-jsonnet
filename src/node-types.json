@@ -312,6 +312,10 @@
           "named": true
         },
         {
+          "type": "tailstrict",
+          "named": true
+        },
+        {
           "type": "true",
           "named": true
         }
@@ -813,7 +817,7 @@
   },
   {
     "type": "tailstrict",
-    "named": false
+    "named": true
   },
   {
     "type": "then",
