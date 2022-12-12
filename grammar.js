@@ -58,7 +58,7 @@ module.exports = grammar({
                     ),
                     seq($.super, ".", $.id),
                     seq($.super, "[", $.expr, "]"),
-                    seq($.expr, "(", optional($.args), ")"),
+                    seq($.expr, "(", optional($.args), ")", optional("tailstrict")),
                     $.id,
                     $.local_bind,
                     seq(

@@ -390,6 +390,18 @@
               {
                 "type": "STRING",
                 "value": ")"
+              },
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "tailstrict"
+                  },
+                  {
+                    "type": "BLANK"
+                  }
+                ]
               }
             ]
           },

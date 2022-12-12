@@ -812,6 +812,10 @@
     "named": true
   },
   {
+    "type": "tailstrict",
+    "named": false
+  },
+  {
     "type": "then",
     "named": false
   },
