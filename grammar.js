@@ -49,72 +49,27 @@ module.exports = grammar({
                 $.dollar,
                 $.string,
                 $.number,
-                seq("{", optional($.objinside), "}"),
-                seq("[", commaSep($.expr, true), "]"),
-                seq(
-                    "[",
-                    $.expr,
-                    optional(","),
-                    $.forspec,
-                    optional($.compspec),
-                    "]",
-                ),
-                prec(PREC.application_indexing, seq($.expr, ".", $.id)),
-                seq($.super, ".", $.id),
-                prec(
-                    PREC.application_indexing,
-                    seq(
-                        $.expr,
-                        "[",
-                        optional($.expr),
-                        optional(
-                            seq(
-                                ":",
-                                optional($.expr),
-                                optional(seq(":", optional($.expr))),
-                            ),
-                        ),
-                        "]",
-                    ),
-                ),
-                seq($.super, "[", $.expr, "]"),
-                prec(
-                    PREC.application_indexing,
-                    seq(
-                        $.expr,
-                        "(",
-                        optional($.args),
-                        ")",
-                        optional($.tailstrict),
-                    ),
-                ),
+                $._object,
+                $._array,
+                $._array_for,
+                $._expr_id,
+                $._expr_expr,
+                $._super_id,
+                $._super_expr,
+                $._expr_args,
                 $.id,
                 $.local_bind,
-                prec.right(
-                    seq(
-                        "if",
-                        field("condition", $.expr),
-                        "then",
-                        field("consequence", $.expr),
-                        optional(seq("else", field("alternative", $.expr))),
-                    ),
-                ),
+                $._conditional,
                 $._binary_expr,
-                prec(
-                    PREC.unary,
-                    seq(
-                        field("operator", $.unaryop),
-                        field("argument", $.expr),
-                    ),
-                ),
-                seq($.expr, "{", $.objinside, "}"),
+                $._unary_expr,
+                $._expr_objinside,
                 $.anonymous_function,
-                prec.right(seq($.assert, ";", $.expr)),
+                $._assert_expr,
                 $.import,
                 $.importstr,
                 $.expr_error,
-                seq($.expr, "in", $.super),
-                seq("(", $.expr, ")"),
+                $._expr_super,
+                $._parenthesis,
             ),
 
         // Literals
@@ -128,6 +83,73 @@ module.exports = grammar({
         super: () => "super",
         local: () => "local",
         tailstrict: () => "tailstrict",
+
+        // Types
+        number: ($) => $._number,
+        string: ($) => $._string,
+        _object: ($) => seq("{", optional($.objinside), "}"),
+        _array: ($) => seq("[", commaSep($.expr, true), "]"),
+
+        _array_for: ($) =>
+            seq(
+                "[",
+                $.expr,
+                optional(","),
+                $.forspec,
+                optional($.compspec),
+                "]",
+            ),
+
+        _expr_id: ($) =>
+            prec(PREC.application_indexing, seq($.expr, ".", $.id)),
+
+        _expr_expr: ($) =>
+            prec(
+                PREC.application_indexing,
+                seq(
+                    $.expr,
+                    "[",
+                    optional($.expr),
+                    optional(
+                        seq(
+                            ":",
+                            optional($.expr),
+                            optional(seq(":", optional($.expr))),
+                        ),
+                    ),
+                    "]",
+                ),
+            ),
+
+        _super_id: ($) => seq($.super, ".", $.id),
+        _super_expr: ($) => seq($.super, "[", $.expr, "]"),
+
+        _expr_args: ($) =>
+            prec(
+                PREC.application_indexing,
+                seq($.expr, "(", optional($.args), ")", optional($.tailstrict)),
+            ),
+
+        id: ($) => $._ident,
+        // This use of an intermediate rule for identifiers is to
+        // overcome some limitations in ocaml-tree-sitter-semgrep.
+        // Indeed, ocaml-tree-sitter-semgrep can't override terminals (here was id)
+        // that are also mentioned in the 'word:' directive.
+        _ident: () => /[_a-zA-Z][_a-zA-Z0-9]*/,
+
+        local_bind: ($) =>
+            prec.right(seq($.local, commaSep1($.bind, false), ";", $.expr)),
+
+        _conditional: ($) =>
+            prec.right(
+                seq(
+                    "if",
+                    field("condition", $.expr),
+                    "then",
+                    field("consequence", $.expr),
+                    optional(seq("else", field("alternative", $.expr))),
+                ),
+            ),
 
         _binary_expr: ($) => {
             const table = [
@@ -156,10 +178,15 @@ module.exports = grammar({
             );
         },
 
+        _unary_expr: ($) =>
+            prec(
+                PREC.unary,
+                seq(field("operator", $.unaryop), field("argument", $.expr)),
+            ),
+
         unaryop: () => choice("-", "+", "!", "~"),
 
-        local_bind: ($) =>
-            prec.right(seq($.local, commaSep1($.bind, false), ";", $.expr)),
+        _expr_objinside: ($) => seq($.expr, "{", $.objinside, "}"),
 
         anonymous_function: ($) =>
             prec.right(
@@ -172,6 +199,8 @@ module.exports = grammar({
                 ),
             ),
 
+        _assert_expr: ($) => prec.right(seq($.assert, ";", $.expr)),
+
         // import string
         import: ($) => seq("import", $.string),
 
@@ -180,6 +209,10 @@ module.exports = grammar({
 
         // error expr
         expr_error: ($) => prec.right(seq("error", $.expr)),
+
+        _expr_super: ($) => seq($.expr, "in", $.super),
+
+        _parenthesis: ($) => seq("(", $.expr, ")"),
 
         objinside: ($) =>
             choice(
@@ -210,9 +243,6 @@ module.exports = grammar({
 
         h: () => choice(":", "::", ":::"),
 
-        // assert in objects
-        assert: ($) => seq("assert", $.expr, optional(seq(":", $.expr))),
-
         objlocal: ($) => seq($.local, $.bind),
 
         compspec: ($) => repeat1(choice($.forspec, $.ifspec)),
@@ -221,6 +251,9 @@ module.exports = grammar({
 
         fieldname: ($) =>
             prec.right(choice($.id, $.string, seq("[", $.expr, "]"))),
+
+        // assert in objects
+        assert: ($) => seq("assert", $.expr, optional(seq(":", $.expr))),
 
         bind: ($) =>
             choice(
@@ -235,13 +268,6 @@ module.exports = grammar({
                         field("body", $.expr),
                     ),
                 ),
-            ),
-
-        params: ($) => commaSep1($.param, true),
-        param: ($) =>
-            seq(
-                field("identifier", $.id),
-                optional(seq("=", field("value", $.expr))),
             ),
 
         args: ($) =>
@@ -259,15 +285,16 @@ module.exports = grammar({
                 ),
             ),
         named_argument: ($) => seq($.id, "=", $.expr),
-        id: ($) => $._ident,
-        // This use of an intermediate rule for identifiers is to
-        // overcome some limitations in ocaml-tree-sitter-semgrep.
-        // Indeed, ocaml-tree-sitter-semgrep can't override terminals (here was id)
-        // that are also mentioned in the 'word:' directive.
-        _ident: () => /[_a-zA-Z][_a-zA-Z0-9]*/,
+
+        params: ($) => commaSep1($.param, true),
+        param: ($) =>
+            seq(
+                field("identifier", $.id),
+                optional(seq("=", field("value", $.expr))),
+            ),
 
         // COPIED FROM: tree-sitter-json
-        number: () => {
+        _number: () => {
             const hex_literal = seq(choice("0x", "0X"), /[\da-fA-F]+/);
 
             const decimal_digits = /\d+/;
@@ -307,7 +334,7 @@ module.exports = grammar({
             );
         },
 
-        string: ($) =>
+        _string: ($) =>
             choice(
                 // Single Quotes
                 seq(
