@@ -24,7 +24,7 @@ module.exports = grammar({
     name: "jsonnet",
     extras: ($) => [/\s/, $.comment],
     externals: ($) => [$._string_start, $._string_content, $._string_end],
-    word: $ => $._ident,
+    word: ($) => $._ident,
     inline: ($) => [$.h, $.objinside],
     conflicts: () => [],
 
@@ -36,34 +36,34 @@ module.exports = grammar({
                 choice(
                     seq("//", /.*/),
                     seq("#", /.*/),
-                    seq("/*", /[^*]*\*+([^/*][^*]*\*+)*/, "/")
-                )
+                    seq("/*", /[^*]*\*+([^/*][^*]*\*+)*/, "/"),
+                ),
             ),
 
         expr: ($) =>
-                choice(
-                    $.null,
-                    $.true,
-                    $.false,
-                    $.self,
-                    $.dollar,
-                    $.string,
-                    $.number,
-                    seq("{", optional($.objinside), "}"),
-                    seq("[", commaSep($.expr, true), "]"),
+            choice(
+                $.null,
+                $.true,
+                $.false,
+                $.self,
+                $.dollar,
+                $.string,
+                $.number,
+                seq("{", optional($.objinside), "}"),
+                seq("[", commaSep($.expr, true), "]"),
+                seq(
+                    "[",
+                    $.expr,
+                    optional(","),
+                    $.forspec,
+                    optional($.compspec),
+                    "]",
+                ),
+                prec(PREC.application_indexing, seq($.expr, ".", $.id)),
+                seq($.super, ".", $.id),
+                prec(
+                    PREC.application_indexing,
                     seq(
-                        "[",
-                        $.expr,
-                        optional(","),
-                        $.forspec,
-                        optional($.compspec),
-                        "]"
-                    ),
-                    prec(PREC.application_indexing,
-                      seq($.expr, ".", $.id)),
-                    seq($.super, ".", $.id),
-                    prec(PREC.application_indexing,
-                      seq(
                         $.expr,
                         "[",
                         optional($.expr),
@@ -71,38 +71,50 @@ module.exports = grammar({
                             seq(
                                 ":",
                                 optional($.expr),
-                                optional(seq(":", optional($.expr)))
-                            )
+                                optional(seq(":", optional($.expr))),
+                            ),
                         ),
-                        "]"
-                      )),
-                    seq($.super, "[", $.expr, "]"),
-                    prec(PREC.application_indexing,
-                        seq($.expr, "(", optional($.args), ")", optional($.tailstrict))),
-                    $.id,
-                    $.local_bind,
-                    prec.right(seq(
+                        "]",
+                    ),
+                ),
+                seq($.super, "[", $.expr, "]"),
+                prec(
+                    PREC.application_indexing,
+                    seq(
+                        $.expr,
+                        "(",
+                        optional($.args),
+                        ")",
+                        optional($.tailstrict),
+                    ),
+                ),
+                $.id,
+                $.local_bind,
+                prec.right(
+                    seq(
                         "if",
                         field("condition", $.expr),
                         "then",
                         field("consequence", $.expr),
-                        optional(seq("else", field("alternative", $.expr)))
-                    )),
-                    $._binary_expr,
-                    prec(PREC.unary,
-                        seq(
-                            field("operator", $.unaryop),
-                            field("argument", $.expr)
-                        )
+                        optional(seq("else", field("alternative", $.expr))),
                     ),
-                    seq($.expr, "{", $.objinside, "}"),
-                    $.anonymous_function,
-                    prec.right(seq($.assert, ";", $.expr)),
-                    $.import,
-                    $.importstr,
-                    $.expr_error,
-                    seq($.expr, "in", $.super),
-                    seq("(", $.expr, ")")
+                ),
+                $._binary_expr,
+                prec(
+                    PREC.unary,
+                    seq(
+                        field("operator", $.unaryop),
+                        field("argument", $.expr),
+                    ),
+                ),
+                seq($.expr, "{", $.objinside, "}"),
+                $.anonymous_function,
+                prec.right(seq($.assert, ";", $.expr)),
+                $.import,
+                $.importstr,
+                $.expr_error,
+                seq($.expr, "in", $.super),
+                seq("(", $.expr, ")"),
             ),
 
         // Literals
@@ -118,25 +130,30 @@ module.exports = grammar({
         tailstrict: () => "tailstrict",
 
         _binary_expr: ($) => {
-           const table = [
-               [PREC.multiplicative, choice("*", "/", "%")],
-               [PREC.additive, choice("+", "-")],
-               [PREC.bitshift, choice("<<", ">>")],
-               [PREC.comparison, choice("<", "<=", ">", ">=")],
-               [PREC.equality, choice("==", "!=")],
-               [PREC.bitand, '&'],
-               [PREC.bitxor, '^'],
-               [PREC.bitor, '|'],
-               [PREC.and, '&&'],
-               [PREC.or, '||'],
-           ];
-           return choice(...table.map(([precedence, operator]) =>
-             prec.left(precedence, seq(
-               field('left', $.expr),
-               field('operator', operator),
-               field('right', $.expr)
-             ))
-           ));
+            const table = [
+                [PREC.multiplicative, choice("*", "/", "%")],
+                [PREC.additive, choice("+", "-")],
+                [PREC.bitshift, choice("<<", ">>")],
+                [PREC.comparison, choice("<", "<=", ">", ">=")],
+                [PREC.equality, choice("==", "!=")],
+                [PREC.bitand, "&"],
+                [PREC.bitxor, "^"],
+                [PREC.bitor, "|"],
+                [PREC.and, "&&"],
+                [PREC.or, "||"],
+            ];
+            return choice(
+                ...table.map(([precedence, operator]) =>
+                    prec.left(
+                        precedence,
+                        seq(
+                            field("left", $.expr),
+                            field("operator", operator),
+                            field("right", $.expr),
+                        ),
+                    ),
+                ),
+            );
         },
 
         unaryop: () => choice("-", "+", "!", "~"),
@@ -151,8 +168,8 @@ module.exports = grammar({
                     "(",
                     optional(field("params", $.params)),
                     ")",
-                    field("body", $.expr)
-                )
+                    field("body", $.expr),
+                ),
             ),
 
         // import string
@@ -178,8 +195,8 @@ module.exports = grammar({
                     repeat(seq(",", $.objlocal)),
                     optional(","),
                     $.forspec,
-                    optional($.compspec)
-                )
+                    optional($.compspec),
+                ),
             ),
 
         member: ($) =>
@@ -188,7 +205,7 @@ module.exports = grammar({
         field: ($) =>
             choice(
                 seq($.fieldname, optional("+"), $.h, $.expr),
-                seq($.fieldname, "(", optional($.params), ")", $.h, $.expr)
+                seq($.fieldname, "(", optional($.params), ")", $.h, $.expr),
             ),
 
         h: () => choice(":", "::", ":::"),
@@ -215,16 +232,16 @@ module.exports = grammar({
                         optional(field("params", $.params)),
                         ")",
                         "=",
-                        field("body", $.expr)
-                    )
-                )
+                        field("body", $.expr),
+                    ),
+                ),
             ),
 
         params: ($) => commaSep1($.param, true),
         param: ($) =>
             seq(
                 field("identifier", $.id),
-                optional(seq("=", field("value", $.expr)))
+                optional(seq("=", field("value", $.expr))),
             ),
 
         args: ($) =>
@@ -233,20 +250,20 @@ module.exports = grammar({
                     $.expr,
                     repeat(seq(",", $.expr)),
                     repeat(seq(",", $.named_argument)),
-                    optional(",")
+                    optional(","),
                 ),
                 seq(
                     $.named_argument,
                     repeat(seq(",", $.named_argument)),
-                    optional(",")
-                )
+                    optional(","),
+                ),
             ),
         named_argument: ($) => seq($.id, "=", $.expr),
         id: ($) => $._ident,
-	// This use of an intermediate rule for identifiers is to
-	// overcome some limitations in ocaml-tree-sitter-semgrep.
-	// Indeed, ocaml-tree-sitter-semgrep can't override terminals (here was id)
-	// that are also mentioned in the 'word:' directive.
+        // This use of an intermediate rule for identifiers is to
+        // overcome some limitations in ocaml-tree-sitter-semgrep.
+        // Indeed, ocaml-tree-sitter-semgrep can't override terminals (here was id)
+        // that are also mentioned in the 'word:' directive.
         _ident: () => /[_a-zA-Z][_a-zA-Z0-9]*/,
 
         // COPIED FROM: tree-sitter-json
@@ -256,7 +273,7 @@ module.exports = grammar({
             const decimal_digits = /\d+/;
             const signed_integer = seq(
                 optional(choice("-", "+")),
-                decimal_digits
+                decimal_digits,
             );
             const exponent_part = seq(choice("e", "E"), signed_integer);
 
@@ -266,7 +283,7 @@ module.exports = grammar({
 
             const decimal_integer_literal = seq(
                 optional(choice("-", "+")),
-                choice("0", seq(/[1-9]/, optional(decimal_digits)))
+                choice("0", seq(/[1-9]/, optional(decimal_digits))),
             );
 
             const decimal_literal = choice(
@@ -274,10 +291,10 @@ module.exports = grammar({
                     decimal_integer_literal,
                     ".",
                     optional(decimal_digits),
-                    optional(exponent_part)
+                    optional(exponent_part),
                 ),
                 seq(".", decimal_digits, optional(exponent_part)),
-                seq(decimal_integer_literal, optional(exponent_part))
+                seq(decimal_integer_literal, optional(exponent_part)),
             );
 
             return token(
@@ -285,8 +302,8 @@ module.exports = grammar({
                     hex_literal,
                     decimal_literal,
                     binary_literal,
-                    octal_literal
-                )
+                    octal_literal,
+                ),
             );
         },
 
@@ -296,33 +313,33 @@ module.exports = grammar({
                 seq(
                     optional("@"),
                     alias($._single, $.string_start),
-                    alias($._single, $.string_end)
+                    alias($._single, $.string_end),
                 ),
                 seq(
                     optional("@"),
                     alias($._single, $.string_start),
                     alias($._str_single, $.string_content),
-                    alias($._single, $.string_end)
+                    alias($._single, $.string_end),
                 ),
                 // Double Quotes
                 seq(
                     optional("@"),
                     alias($._double, $.string_start),
-                    alias($._double, $.string_end)
+                    alias($._double, $.string_end),
                 ),
                 seq(
                     optional("@"),
                     alias($._double, $.string_start),
                     alias($._str_double, $.string_content),
-                    alias($._double, $.string_end)
+                    alias($._double, $.string_end),
                 ),
                 // ||| Quotes
                 seq(
                     optional("@"),
                     alias($._string_start, $.string_start),
                     alias($._string_content, $.string_content),
-                    alias($._string_end, $.string_end)
-                )
+                    alias($._string_end, $.string_end),
+                ),
             ),
 
         _single: () => "'",
@@ -330,12 +347,18 @@ module.exports = grammar({
 
         _str_double: ($) =>
             repeat1(
-                choice(token.immediate(prec(1, /[^\\"\n]+/)), $.escape_sequence)
+                choice(
+                    token.immediate(prec(1, /[^\\"\n]+/)),
+                    $.escape_sequence,
+                ),
             ),
 
         _str_single: ($) =>
             repeat1(
-                choice(token.immediate(prec(1, /[^\\'\n]+/)), $.escape_sequence)
+                choice(
+                    token.immediate(prec(1, /[^\\'\n]+/)),
+                    $.escape_sequence,
+                ),
             ),
 
         escape_sequence: () =>
