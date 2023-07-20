@@ -203,7 +203,10 @@ module.exports = grammar({
         ifspec: ($) => seq("if", $.expr),
 
         fieldname: ($) =>
-            prec.right(choice($.id, $.string, seq("[", $.expr, "]"))),
+            prec.right(
+                PREC.application_indexing,
+                choice($.id, $.string, seq("[", $.expr, "]")),
+            ),
 
         bind: ($) =>
             choice(
