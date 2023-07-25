@@ -218,18 +218,17 @@ module.exports = grammar({
             choice(
                 // seq($.member, repeat(seq(",", $.member)), optional(",")),
                 commaSep1($.member, true),
-                seq(
-                    repeat(seq($.objlocal, ",")),
-                    "[",
-                    $.expr,
-                    "]",
-                    ":",
-                    $.expr,
-                    repeat(seq(",", $.objlocal)),
-                    optional(","),
-                    $.forspec,
-                    optional($.compspec),
-                ),
+                $._objforloop,
+            ),
+
+        _objforloop: ($) =>
+            seq(
+                repeat(seq($.objlocal, ",")),
+                $.field,
+                repeat(seq(",", $.objlocal)),
+                optional(","),
+                $.forspec,
+                optional($.compspec),
             ),
 
         member: ($) =>
