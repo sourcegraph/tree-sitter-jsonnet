@@ -1,0 +1,44 @@
+======================
+For loop in array
+======================
+
+[
+  i
+  for i in std.range(0,10)
+]
+
+---
+
+(document
+  (expr
+    (expr (id))
+    (forspec
+      (id)
+      (expr (expr (expr (id)) (id))
+      (args (expr (number)) (expr (number)))))))
+
+======================
+For loop in object
+======================
+
+{
+  ['item' + i]: i
+  for i in std.range(0,10)
+}
+
+---
+
+(document
+  (expr
+    (expr
+      (expr
+          (string
+            (string_start)
+            (string_content)
+            (string_end)))
+      (expr (id)))
+      (expr (id))
+      (forspec
+        (id)
+        (expr (expr (expr (id)) (id))
+        (args (expr (number)) (expr (number)))))))

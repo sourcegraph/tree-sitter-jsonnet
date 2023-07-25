@@ -156,7 +156,7 @@ module.exports = grammar({
                 [PREC.multiplicative, choice("*", "/", "%")],
                 [PREC.additive, choice("+", "-")],
                 [PREC.bitshift, choice("<<", ">>")],
-                [PREC.comparison, choice("<", "<=", ">", ">=")],
+                [PREC.comparison, choice("<", "<=", ">", ">=", "in")],
                 [PREC.equality, choice("==", "!=")],
                 [PREC.bitand, "&"],
                 [PREC.bitxor, "^"],
@@ -210,7 +210,7 @@ module.exports = grammar({
         // error expr
         expr_error: ($) => prec.right(seq("error", $.expr)),
 
-        _expr_super: ($) => seq($.expr, "in", $.super),
+        _expr_super: ($) => prec(PREC.comparison, seq($.expr, "in", $.super)),
 
         _parenthesis: ($) => seq("(", $.expr, ")"),
 
