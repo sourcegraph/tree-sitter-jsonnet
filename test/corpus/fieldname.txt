@@ -74,14 +74,14 @@ Resolve expr in fieldname key 3
 ===============================
 
 local Margarita(salted) = {
-      ingredients: [
-          { kind: 'Tequila Blanco', qty: 2 },
-            ],
-              [if salted then 'garnish']: 'Salt',
+  [if salted then 'garnish']: 'Salt',
+  ingredients: [
+    { kind: 'Tequila Blanco', qty: 2 },
+  ],
 };
 {
-      Margarita: Margarita(true),
-        'Margarita Unsalted': Margarita(false),
+  Margarita: Margarita(true),
+  'Margarita Unsalted': Margarita(false),
 }
 
 ---
@@ -97,6 +97,22 @@ local Margarita(salted) = {
      (param
       identifier: (id)))
     body: (expr
+    (member
+      (field
+       (fieldname
+        (expr
+         condition: (expr (id))
+         consequence:
+         (expr
+          (string
+           (string_start)
+           (string_content)
+           (string_end)))))
+       (expr
+        (string
+         (string_start)
+         (string_content)
+         (string_end)))))
      (member
       (field
        (fieldname (id))
@@ -116,22 +132,7 @@ local Margarita(salted) = {
             (id))
            (expr
             (number))))))))
-     (member
-      (field
-       (fieldname
-        (expr
-         condition: (expr (id))
-         consequence:
-         (expr
-          (string
-           (string_start)
-           (string_content)
-           (string_end)))))
-       (expr
-        (string
-         (string_start)
-         (string_content)
-         (string_end)))))))
+     ))
    (expr
     (member
      (field
