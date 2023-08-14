@@ -361,15 +361,15 @@ module.exports = grammar({
                 ),
                 // ||| Quotes
                 seq(
-                    optional("@"),
-                    alias($._string_start, $.string_start),
-                    alias($._string_content, $.string_content),
-                    alias($._string_end, $.string_end),
+                    alias($._multiline, $.string_start),
+                    alias($._str_multiline, $.string_content),
+                    alias($._multiline, $.string_end),
                 ),
             ),
 
         _single: () => "'",
         _double: () => '"',
+        _multiline: () => "|||",
 
         _str_double: ($) =>
             repeat1(
@@ -389,6 +389,22 @@ module.exports = grammar({
 
         escape_sequence: () =>
             token.immediate(seq("\\", /(\"|\\|\/|b|f|n|r|t|u)/)),
+
+        _str_multiline: ($) =>
+            repeat1(
+                token.immediate(
+                    prec(
+                        1,
+                        repeat1(
+                            choice(
+                                /[^\|]/, // Catch any character until | is found
+                                /\|[^\|]/, // Allow single |
+                                /\|\|[^\|]/, // Allow double ||
+                            ),
+                        ),
+                    ),
+                ),
+            ),
     },
 });
 

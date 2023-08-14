@@ -1,0 +1,85 @@
+==============
+Double quotes
+==============
+
+"abc"
+
+---
+
+(document
+  (expr
+  (string
+    (string_start)
+    (string_content)
+    (string_end))))
+
+==============
+Single quotes
+==============
+
+'abc'
+
+---
+
+(document
+  (expr
+  (string
+    (string_start)
+    (string_content)
+    (string_end))))
+
+==============
+Multiple lines - single line
+==============
+
+|||
+  abc
+|||
+
+---
+
+(document
+  (expr
+  (string
+    (string_start)
+    (string_content)
+    (string_end))))
+
+==============
+Multiple lines
+==============
+
+|||
+  abc
+  dd
+  abc
+|||
+
+---
+
+(document
+  (expr
+  (string
+    (string_start)
+    (string_content)
+    (string_end))))
+
+==============
+Multiple lines with one or two | in line
+==============
+
+|||
+  abc
+  aa|aa
+  aa||aa
+  abc
+|||
+
+---
+
+(document
+  (expr
+  (string
+    (string_start)
+    (string_content)
+    (string_end))))
