@@ -235,20 +235,15 @@ module.exports = grammar({
         parenthesis: ($) => seq("(", $._expr, ")"),
 
         objinside: ($) =>
-            choice(
+            seq(
                 // seq($.member, repeat(seq(",", $.member)), optional(",")),
                 commaSep1($.member, true),
-                $.objforloop,
-            ),
-
-        objforloop: ($) =>
-            seq(
-                repeat(seq($.objlocal, ",")),
-                $.field,
-                repeat(seq(",", $.objlocal)),
-                optional(","),
-                $.forspec,
-                optional($.compspec),
+                optional(
+                    seq(
+                        $.forspec,
+                        optional($.compspec)
+                    )
+                )
             ),
 
         member: ($) =>
