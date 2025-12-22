@@ -238,12 +238,7 @@ module.exports = grammar({
             seq(
                 // seq($.member, repeat(seq(",", $.member)), optional(",")),
                 commaSep1($.member, true),
-                optional(
-                    seq(
-                        $.forspec,
-                        optional($.compspec)
-                    )
-                )
+                optional(seq($.forspec, optional($.compspec))),
             ),
 
         member: ($) =>
