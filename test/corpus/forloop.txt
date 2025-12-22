@@ -31,7 +31,7 @@ For loop in object
 
 (document
   (object
-    (objforloop
+    (member
       (field
         (fieldname
           (binary
@@ -42,12 +42,12 @@ For loop in object
                  (string_end))
              operator: (additive)
              right: (id)))
-        (id))
-      (forspec
-        (id)
-        (functioncall
-          (fieldaccess (id) last: (id))
-          (args (number) (number)))))))
+        (id)))
+    (forspec
+      (id)
+      (functioncall
+        (fieldaccess (id) last: (id))
+        (args (number) (number))))))
 
 ================================
 For loop in object with function
@@ -62,7 +62,7 @@ For loop in object with function
 
 (document
   (object
-    (objforloop
+    (member
       (field
         function: (fieldname
           (binary
@@ -73,14 +73,202 @@ For loop in object with function
             operator: (additive)
             right: (id)))
           (params
-            (param 
+            (param
               identifier: (id)))
           (binary
             left: (id)
             operator: (additive)
+            right: (id))))
+    (forspec
+      (id)
+      (functioncall
+        (fieldaccess (id) last: (id))
+        (args (number) (number))))))
+
+=========================================
+For loop in object with comma after field
+=========================================
+
+{
+  ['item' + i]: i,
+  for i in std.range(0,10)
+}
+
+---
+
+(document
+  (object
+    (member
+      (field
+        (fieldname
+          (binary
+            left: (string
+                    (string_start)
+                    (string_content)
+                    (string_end))
+            operator: (additive)
             right: (id)))
-      (forspec
-        (id)
-        (functioncall
-          (fieldaccess (id) last: (id))
-          (args (number) (number)))))))
+          (id)))
+    (forspec
+    (id)
+    (functioncall
+        (fieldaccess (id) last: (id))
+        (args (number) (number))))))
+
+==============================================
+For loop in object with leading local bindings
+==============================================
+
+{
+  local j = 1,
+  ['item' + i]: j,
+  for i in std.range(0,10)
+}
+
+---
+
+(document
+  (object
+    (member
+      (objlocal
+        (local)
+        (bind
+          (id)
+          (number))))
+    (member
+      (field
+        (fieldname
+          (binary
+            (string
+              (string_start)
+              (string_content)
+              (string_end))
+            (additive)
+            (id)))
+        (id)))
+    (forspec
+      (id)
+      (functioncall
+        (fieldaccess
+          (id)
+          (id))
+        (args
+          (number)
+          (number))))))
+
+==========================================
+For loop in object with leading assertions
+==========================================
+
+{
+  assert true,
+  ['item' + i]: i,
+  for i in std.range(0,10)
+}
+
+---
+
+(document
+  (object
+    (member
+      (assert
+        (true)))
+    (member
+      (field
+        (fieldname
+          (binary
+            (string
+              (string_start)
+              (string_content)
+              (string_end))
+            (additive)
+            (id)))
+        (id)))
+    (forspec
+      (id)
+      (functioncall
+        (fieldaccess
+          (id)
+          (id))
+        (args
+          (number)
+          (number))))))
+
+================================================
+For loop in object with following local bindings
+================================================
+
+{
+  ['item' + i]: j,
+  local j = 1,
+  for i in std.range(0,10)
+}
+
+---
+
+(document
+  (object
+    (member
+      (field
+        (fieldname
+          (binary
+            (string
+              (string_start)
+              (string_content)
+              (string_end))
+            (additive)
+            (id)))
+        (id)))
+    (member
+      (objlocal
+        (local)
+        (bind
+          (id)
+          (number))))
+    (forspec
+      (id)
+      (functioncall
+        (fieldaccess
+          (id)
+          (id))
+        (args
+          (number)
+          (number))))))
+
+============================================
+For loop in object with following assertions
+============================================
+
+{
+  ['item' + i]: i,
+  assert true,
+  for i in std.range(0,10)
+}
+
+---
+
+(document
+  (object
+    (member
+      (field
+        (fieldname
+          (binary
+            (string
+              (string_start)
+              (string_content)
+              (string_end))
+            (additive)
+            (id)))
+        (id)))
+    (member
+      (assert
+        (true)))
+    (forspec
+      (id)
+      (functioncall
+        (fieldaccess
+          (id)
+          (id))
+        (args
+          (number)
+          (number))))))
