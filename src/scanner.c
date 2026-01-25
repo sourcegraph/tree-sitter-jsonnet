@@ -72,6 +72,7 @@ void tree_sitter_jsonnet_external_scanner_deserialize(void *payload, const char 
 
 static bool scan_block_start(TSLexer *lexer) {
   if (consume_char('|', lexer) && consume_char('|', lexer) && consume_char('|', lexer)) {
+    consume_char('-', lexer); // (optional)
     return true;
   }
 
